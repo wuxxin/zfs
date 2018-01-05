@@ -865,13 +865,13 @@ const struct file_operations zpl_file_operations = {
 #else
 	.read		= do_sync_read,
 	.write		= do_sync_write,
-	.aio_read	= zpl_aio_read,
-	.aio_write	= zpl_aio_write,
+	/*.aio_read	= zpl_aio_read,
+	.aio_write	= zpl_aio_write,*/
 #endif
 	.mmap		= zpl_mmap,
 	.fsync		= zpl_fsync,
 #ifdef HAVE_FILE_AIO_FSYNC
-	.aio_fsync	= zpl_aio_fsync,
+	/*.aio_fsync	= zpl_aio_fsync,*/
 #endif
 #ifdef HAVE_FILE_FALLOCATE
 	.fallocate	= zpl_fallocate,
