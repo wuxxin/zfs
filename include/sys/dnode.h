@@ -145,7 +145,7 @@ enum dnode_dirtycontext {
 /* Does dnode have a SA spill blkptr in bonus? */
 #define	DNODE_FLAG_SPILL_BLKPTR			(1 << 2)
 
-/* User/Group dnode accounting */
+/* User/Group/Project dnode accounting */
 #define	DNODE_FLAG_USEROBJUSED_ACCOUNTED	(1 << 3)
 
 typedef struct dnode_phys {
@@ -293,8 +293,8 @@ struct dnode {
 	/* used in syncing context */
 	uint64_t dn_oldused;	/* old phys used bytes */
 	uint64_t dn_oldflags;	/* old phys dn_flags */
-	uint64_t dn_olduid, dn_oldgid;
-	uint64_t dn_newuid, dn_newgid;
+	uint64_t dn_olduid, dn_oldgid, dn_oldprojid;
+	uint64_t dn_newuid, dn_newgid, dn_newprojid;
 	int dn_id_flags;
 
 	/* holds prefetch structure */
