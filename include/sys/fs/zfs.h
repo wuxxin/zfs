@@ -184,6 +184,8 @@ typedef enum {
 	ZFS_PROP_REMAPTXG,		/* not exposed to the user */
 	ZFS_PROP_SPECIAL_SMALL_BLOCKS,
 	ZFS_PROP_IVSET_GUID,		/* not exposed to the user */
+	ZFS_PROP_UIDMAP,
+	ZFS_PROP_GIDMAP,
 	ZFS_NUM_PROPS
 } zfs_prop_t;
 
