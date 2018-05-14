@@ -33,6 +33,7 @@
 #include <sys/sa.h>
 #include <sys/rrwlock.h>
 #include <sys/zfs_ioctl.h>
+#include <sys/zfs_ugid_map.h>
 
 #ifdef	__cplusplus
 extern "C" {
@@ -126,6 +127,8 @@ struct zfsvfs {
 	uint64_t	z_hold_size;	/* znode hold array size */
 	avl_tree_t	*z_hold_trees;	/* znode hold trees */
 	kmutex_t	*z_hold_locks;	/* znode hold locks */
+	struct zfs_ugid_map    *z_uid_map;
+	struct zfs_ugid_map    *z_gid_map;
 };
 
 #define	ZSB_XATTR	0x0001		/* Enable user xattrs */

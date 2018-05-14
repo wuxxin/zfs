@@ -57,6 +57,7 @@ SUBDIRS = \
 	threadsappend \
 	tmpfile \
 	truncate \
+	ugid_maps \
 	upgrade \
 	user_namespace \
 	userquota \

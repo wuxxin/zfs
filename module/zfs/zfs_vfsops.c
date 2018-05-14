@@ -66,6 +66,7 @@
 #include <sys/dmu_objset.h>
 #include <sys/spa_boot.h>
 #include <sys/zpl.h>
+#include <sys/zfs_ugid_map.h>
 #include "zfs_comutil.h"
 
 enum {
@@ -943,6 +944,9 @@ zfsvfs_init(zfsvfs_t *zfsvfs, objset_t *os)
 		return (error);
 	zfsvfs->z_acl_type = (uint_t)val;
 
+	zfsvfs->z_uid_map = zfs_create_ugid_map(zfsvfs->z_os, ZFS_PROP_UIDMAP);
+	zfsvfs->z_gid_map = zfs_create_ugid_map(zfsvfs->z_os, ZFS_PROP_GIDMAP);
+
 	/*
 	 * Fold case on file systems that are always or sometimes case
 	 * insensitive.
@@ -1191,6 +1195,8 @@ zfsvfs_free(zfsvfs_t *zfsvfs)
 	}
 	vmem_free(zfsvfs->z_hold_trees, sizeof (avl_tree_t) * size);
 	vmem_free(zfsvfs->z_hold_locks, sizeof (kmutex_t) * size);
+	zfs_free_ugid_map(zfsvfs->z_uid_map);
+	zfs_free_ugid_map(zfsvfs->z_gid_map);
 	zfsvfs_vfs_free(zfsvfs->z_vfs);
 	kmem_free(zfsvfs, sizeof (zfsvfs_t));
 }

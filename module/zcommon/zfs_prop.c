@@ -409,6 +409,12 @@ zfs_prop_init(void)
 	    "receive_resume_token",
 	    NULL, PROP_READONLY, ZFS_TYPE_FILESYSTEM | ZFS_TYPE_VOLUME,
 	    "<string token>", "RESUMETOK");
+	zprop_register_string(ZFS_PROP_UIDMAP, "uidmap",
+	    "none", PROP_INHERIT, ZFS_TYPE_FILESYSTEM,
+	    "<map> | none", "UIDMAP");
+	zprop_register_string(ZFS_PROP_GIDMAP, "gidmap",
+	    "none", PROP_INHERIT, ZFS_TYPE_FILESYSTEM,
+	    "<map> | none", "GIDMAP");
 
 	/* readonly number properties */
 	zprop_register_number(ZFS_PROP_USED, "used", 0, PROP_READONLY,
