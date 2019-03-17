@@ -365,7 +365,8 @@ get_linux_shareopts_cb(const char *key, const char *value, void *cookie)
 	    strcmp(key, "no_root_squash") != 0 &&
 	    strcmp(key, "all_squash") != 0 &&
 	    strcmp(key, "no_all_squash") != 0 && strcmp(key, "fsid") != 0 &&
-	    strcmp(key, "anonuid") != 0 && strcmp(key, "anongid") != 0) {
+	    strcmp(key, "anonuid") != 0 && strcmp(key, "anongid") != 0 &&
+	    strcmp(key, "root_uid") != 0) {
 		return (SA_SYNTAX_ERR);
 	}
 
