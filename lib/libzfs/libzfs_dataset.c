@@ -61,6 +61,8 @@
 #include <sys/zap.h>
 #include <sys/dsl_crypt.h>
 #include <sys/zfs_ugid_map.h>
+#include <sys/zfs_throttle.h>
+
 #include <libzfs.h>
 #include <libzutil.h>
 
@@ -1211,7 +1213,7 @@ zfs_valid_proplist(libzfs_handle_t *hdl, zfs_type_t type, nvlist_t *nvl,
 		}
 
 		if (zprop_parse_value(hdl, elem, prop, type, ret,
-		    &strval, &intval, errbuf) != 0)
+		    &strval, &intval, errbuf, zhp->zfs_name) != 0)
 			goto error;
 
 		/*
@@ -2902,6 +2904,32 @@ zfs_prop_get(zfs_handle_t *zhp, zfs_prop_t prop, char *propbuf, size_t proplen,
 		zcp_check(zhp, prop, val, NULL);
 		break;
 
+	case ZFS_PROP_MAX_READ_OPS:
+	case ZFS_PROP_MAX_WRITE_OPS:
+
+		if (get_numeric_property(zhp, prop, src, &source, &val) != 0)
+			return (-1);
+
+		switch (val) {
+			case ZFS_THROTTLE_NONE:
+				(void) strlcpy(propbuf, "none", proplen);
+				break;
+			case ZFS_THROTTLE_SHARED:
+				(void) strlcpy(propbuf, "shared", proplen);
+				break;
+			case ZFS_THROTTLE_NOLIMIT:
+				(void) strlcpy(propbuf, "nolimit", proplen);
+				break;
+			default:
+				if (literal)
+					(void) snprintf(propbuf, proplen,
+					    "%llu", (u_longlong_t)val);
+				else
+					zfs_nicenum(val, propbuf, proplen);
+				break;
+		}
+		break;
+
 	case ZFS_PROP_FILESYSTEM_LIMIT:
 	case ZFS_PROP_SNAPSHOT_LIMIT:
 	case ZFS_PROP_FILESYSTEM_COUNT:
@@ -3518,6 +3546,12 @@ int
 zfs_parent_name(zfs_handle_t *zhp, char *buf, size_t buflen)
 {
 	return (parent_name(zfs_get_name(zhp), buf, buflen));
+}
+
+int
+zfs_parent_name_by_name(const char *parent_buf, char *buf, size_t buflen)
+{
+	return (parent_name(parent_buf, buf, buflen));
 }
 
 /*

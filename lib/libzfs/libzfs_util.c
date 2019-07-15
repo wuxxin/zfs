@@ -55,6 +55,7 @@
 #include <zfs_fletcher.h>
 #include <libzutil.h>
 #include <sys/zfs_sysfs.h>
+#include <sys/zfs_throttle.h>
 
 int
 libzfs_errno(libzfs_handle_t *hdl)
@@ -1573,7 +1574,7 @@ zfs_nicestrtonum(libzfs_handle_t *hdl, const char *value, uint64_t *num)
 int
 zprop_parse_value(libzfs_handle_t *hdl, nvpair_t *elem, int prop,
     zfs_type_t type, nvlist_t *ret, char **svalp, uint64_t *ivalp,
-    const char *errbuf)
+    const char *errbuf, const char *fsname)
 {
 	data_type_t datatype = nvpair_type(elem);
 	zprop_type_t proptype;
@@ -1620,6 +1621,29 @@ zprop_parse_value(libzfs_handle_t *hdl, nvpair_t *elem, int prop,
 	case PROP_TYPE_NUMBER:
 		if (datatype == DATA_TYPE_STRING) {
 			(void) nvpair_value_string(elem, &value);
+			/*
+			 * Special handling for throttling.
+			 */
+			if ((prop == ZFS_PROP_MAX_READ_OPS ||
+			    prop == ZFS_PROP_MAX_WRITE_OPS)) {
+				if (strcmp(value, "none") == 0) {
+					*ivalp = ZFS_THROTTLE_NONE;
+					break;
+				}
+				if (strcmp(value, "shared") == 0) {
+					char fsparent[ZFS_MAXPROPLEN];
+					if (zfs_parent_name_by_name(
+					    fsname, fsparent,
+					    ZFS_MAXPROPLEN) == -1)
+						goto error;
+					*ivalp = ZFS_THROTTLE_SHARED;
+					break;
+				}
+				if (strcmp(value, "nolimit") == 0) {
+					*ivalp = ZFS_THROTTLE_NOLIMIT;
+					break;
+				}
+			}
 			if (strcmp(value, "none") == 0) {
 				isnone = B_TRUE;
 			} else if (strcmp(value, "auto") == 0) {
