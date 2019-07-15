@@ -38,6 +38,7 @@
 #include <sys/zfs_ioctl.h>
 #include <sys/objlist.h>
 #include <sys/zfs_ugid_map.h>
+#include <sys/zfs_throttle.h>
 
 #ifdef	__cplusplus
 extern "C" {
@@ -138,6 +139,7 @@ struct zfsvfs {
 	taskqid_t	z_drain_task;	/* task id for the unlink drain task */
 	struct zfs_ugid_map    *z_uid_map;
 	struct zfs_ugid_map    *z_gid_map;
+	zfs_throttle_t	*z_throttle;	/* zfs throttle struct */
 };
 
 #define	ZSB_XATTR	0x0001		/* Enable user xattrs */
