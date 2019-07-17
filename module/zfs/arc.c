@@ -443,9 +443,9 @@ int zfs_arc_min_prefetch_ms = 0;
 int zfs_arc_min_prescient_prefetch_ms = 0;
 int zfs_arc_p_dampener_disable = 1;
 int zfs_arc_meta_prune = 10000;
-int zfs_arc_meta_strategy = ARC_STRATEGY_META_BALANCED;
+int zfs_arc_meta_strategy = ARC_STRATEGY_META_ONLY;
 int zfs_arc_meta_adjust_restarts = 4096;
-int zfs_arc_lotsfree_percent = 10;
+int zfs_arc_lotsfree_percent = 0;
 
 /* The 6 states: */
 static arc_state_t ARC_anon;
@@ -7795,8 +7795,8 @@ arc_init(void)
 	mutex_init(&arc_adjust_lock, NULL, MUTEX_DEFAULT, NULL);
 	cv_init(&arc_adjust_waiters_cv, NULL, CV_DEFAULT, NULL);
 
-	arc_min_prefetch_ms = 1000;
-	arc_min_prescient_prefetch_ms = 6000;
+	arc_min_prefetch_ms = 8000;
+	arc_min_prescient_prefetch_ms = 16000;
 
 #ifdef _KERNEL
 	/*

@@ -147,9 +147,9 @@ int zfs_scan_strict_mem_lim = B_FALSE;
  */
 unsigned long zfs_scan_vdev_limit = 4 << 20;
 
-int zfs_scan_issue_strategy = 0;
+int zfs_scan_issue_strategy = 2;
 int zfs_scan_legacy = B_FALSE; /* don't queue & sort zios, go direct */
-unsigned long zfs_scan_max_ext_gap = 2 << 20; /* in bytes */
+unsigned long zfs_scan_max_ext_gap = 8 << 20; /* in bytes */
 
 /*
  * fill_weight is non-tunable at runtime, so we copy it at module init from
@@ -162,14 +162,14 @@ static uint64_t fill_weight;
 /* See dsl_scan_should_clear() for details on the memory limit tunables */
 uint64_t zfs_scan_mem_lim_min = 16 << 20;	/* bytes */
 uint64_t zfs_scan_mem_lim_soft_max = 128 << 20;	/* bytes */
-int zfs_scan_mem_lim_fact = 20;		/* fraction of physmem */
-int zfs_scan_mem_lim_soft_fact = 20;	/* fraction of mem lim above */
+int zfs_scan_mem_lim_fact = 512;		/* fraction of physmem */
+int zfs_scan_mem_lim_soft_fact = 16;	/* fraction of mem lim above */
 
-int zfs_scrub_min_time_ms = 1000; /* min millisecs to scrub per txg */
-int zfs_obsolete_min_time_ms = 500; /* min millisecs to obsolete per txg */
-int zfs_free_min_time_ms = 1000; /* min millisecs to free per txg */
-int zfs_resilver_min_time_ms = 3000; /* min millisecs to resilver per txg */
-int zfs_scan_checkpoint_intval = 7200; /* in seconds */
+int zfs_scrub_min_time_ms = 3000; /* min millisecs to scrub per txg */
+int zfs_obsolete_min_time_ms = 1500; /* min millisecs to obsolete per txg */
+int zfs_free_min_time_ms = 2000; /* min millisecs to free per txg */
+int zfs_resilver_min_time_ms = 5000; /* min millisecs to resilver per txg */
+int zfs_scan_checkpoint_intval = 3600; /* in seconds */
 int zfs_scan_suspend_progress = 0; /* set to prevent scans from progressing */
 int zfs_no_scrub_io = B_FALSE; /* set to disable scrub i/o */
 int zfs_no_scrub_prefetch = B_FALSE; /* set to disable scrub prefetch */
