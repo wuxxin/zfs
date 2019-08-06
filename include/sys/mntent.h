@@ -99,5 +99,7 @@
 #define	MNTOPT_NOACL	"noacl"		/* likewise */
 #define	MNTOPT_POSIXACL	"posixacl"	/* likewise */
 #define	MNTOPT_MNTPOINT	"mntpoint"	/* mount point hint */
+#define	MNTOPT_UIDMAP	"uidmap"	/* map for shifting uids */
+#define	MNTOPT_GIDMAP	"gidmap"	/* map for shitfting gids */
 
 #endif	/* _SYS_MNTENT_H */

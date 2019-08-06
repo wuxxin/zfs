@@ -80,6 +80,8 @@ enum {
 	TOKEN_NBMAND,
 	TOKEN_NONBMAND,
 	TOKEN_MNTPOINT,
+	TOKEN_UIDMAP,
+	TOKEN_GIDMAP,
 	TOKEN_LAST,
 };
 
@@ -103,6 +105,8 @@ static const match_table_t zpl_tokens = {
 	{ TOKEN_NBMAND,		MNTOPT_NBMAND },
 	{ TOKEN_NONBMAND,	MNTOPT_NONBMAND },
 	{ TOKEN_MNTPOINT,	MNTOPT_MNTPOINT "=%s" },
+	{ TOKEN_UIDMAP,		MNTOPT_UIDMAP "=%s" },
+	{ TOKEN_GIDMAP,		MNTOPT_GIDMAP "=%s" },
 	{ TOKEN_LAST,		NULL },
 };
 
@@ -112,6 +116,10 @@ zfsvfs_vfs_free(vfs_t *vfsp)
 	if (vfsp != NULL) {
 		if (vfsp->vfs_mntpoint != NULL)
 			strfree(vfsp->vfs_mntpoint);
+		if (vfsp->vfs_uidmap != NULL)
+			zfs_free_ugid_map(vfsp->vfs_uidmap);
+		if (vfsp->vfs_gidmap != NULL)
+			zfs_free_ugid_map(vfsp->vfs_gidmap);
 
 		kmem_free(vfsp, sizeof (vfs_t));
 	}
@@ -120,6 +128,9 @@ zfsvfs_vfs_free(vfs_t *vfsp)
 static int
 zfsvfs_parse_option(char *option, int token, substring_t *args, vfs_t *vfsp)
 {
+	int err;
+	char *arg;
+
 	switch (token) {
 	case TOKEN_RO:
 		vfsp->vfs_readonly = B_TRUE;
@@ -198,6 +209,30 @@ zfsvfs_parse_option(char *option, int token, substring_t *args, vfs_t *vfsp)
 		if (vfsp->vfs_mntpoint == NULL)
 			return (SET_ERROR(ENOMEM));
 
+		break;
+	case TOKEN_UIDMAP:
+		arg = match_strdup(&args[0]);
+		if (arg == NULL)
+			return (SET_ERROR(ENOMEM));
+		printk("zfs: got uidmap opt: %s\n", arg);
+		err = zfs_ugid_map_create_or_add_entry(&vfsp->vfs_uidmap, arg);
+		strfree(arg);
+		if (vfsp->vfs_uidmap == NULL)
+			printk("is null!\n");
+		else
+			printk("not null!\n");
+		if (err != 0)
+			return (SET_ERROR(err));
+		break;
+	case TOKEN_GIDMAP:
+		arg = match_strdup(&args[0]);
+		if (arg == NULL)
+			return (SET_ERROR(ENOMEM));
+		printk("zfs: got gidmap opt: %s\n", arg);
+		err = zfs_ugid_map_create_or_add_entry(&vfsp->vfs_gidmap, arg);
+		strfree(arg);
+		if (err != 0)
+			return (SET_ERROR(err));
 		break;
 	default:
 		break;
@@ -987,7 +1022,7 @@ zfs_id_overquota(zfsvfs_t *zfsvfs, uint64_t usedobj, uint64_t id)
  * zfsvfs.
  */
 static int
-zfsvfs_init(zfsvfs_t *zfsvfs, objset_t *os)
+zfsvfs_init(zfsvfs_t *zfsvfs, objset_t *os, struct zfs_ugid_map *uidmap, struct zfs_ugid_map *gidmap)
 {
 	int error;
 	uint64_t val;
@@ -1026,8 +1061,20 @@ zfsvfs_init(zfsvfs_t *zfsvfs, objset_t *os)
 		return (error);
 	zfsvfs->z_acl_type = (uint_t)val;
 
-	zfsvfs->z_uid_map = zfs_create_ugid_map(zfsvfs->z_os, ZFS_PROP_UIDMAP);
-	zfsvfs->z_gid_map = zfs_create_ugid_map(zfsvfs->z_os, ZFS_PROP_GIDMAP);
+	if (uidmap == NULL) {
+		zfsvfs->z_uid_map = zfs_create_ugid_map(zfsvfs->z_os, ZFS_PROP_UIDMAP);
+	} else {
+		zfsvfs->z_uid_map = zfs_copy_ugid_map(uidmap);
+		if (zfsvfs->z_uid_map == NULL)
+			return (SET_ERROR(ENOMEM));
+	}
+	if (gidmap == NULL) {
+		zfsvfs->z_gid_map = zfs_create_ugid_map(zfsvfs->z_os, ZFS_PROP_GIDMAP);
+	} else {
+		zfsvfs->z_gid_map = zfs_copy_ugid_map(gidmap);
+		if (zfsvfs->z_gid_map == NULL)
+			return (SET_ERROR(ENOMEM));
+	}
 
 	/*
 	 * Fold case on file systems that are always or sometimes case
@@ -1138,7 +1185,7 @@ zfsvfs_init(zfsvfs_t *zfsvfs, objset_t *os)
 }
 
 int
-zfsvfs_create(const char *osname, boolean_t readonly, zfsvfs_t **zfvp)
+zfsvfs_create(const char *osname, boolean_t readonly, struct zfs_ugid_map *uidmap, struct zfs_ugid_map *gidmap, zfsvfs_t **zfvp)
 {
 	objset_t *os;
 	zfsvfs_t *zfsvfs;
@@ -1153,7 +1200,7 @@ zfsvfs_create(const char *osname, boolean_t readonly, zfsvfs_t **zfvp)
 		return (error);
 	}
 
-	error = zfsvfs_create_impl(zfvp, zfsvfs, os);
+	error = zfsvfs_create_impl(zfvp, zfsvfs, os, uidmap, gidmap);
 	if (error != 0) {
 		dmu_objset_disown(os, B_TRUE, zfsvfs);
 	}
@@ -1166,7 +1213,7 @@ zfsvfs_create(const char *osname, boolean_t readonly, zfsvfs_t **zfvp)
  * on a failure.  Do not pass in a statically allocated zfsvfs.
  */
 int
-zfsvfs_create_impl(zfsvfs_t **zfvp, zfsvfs_t *zfsvfs, objset_t *os)
+zfsvfs_create_impl(zfsvfs_t **zfvp, zfsvfs_t *zfsvfs, objset_t *os, struct zfs_ugid_map *uidmap, struct zfs_ugid_map *gidmap)
 {
 	int error;
 
@@ -1194,7 +1241,7 @@ zfsvfs_create_impl(zfsvfs_t **zfvp, zfsvfs_t *zfsvfs, objset_t *os)
 		mutex_init(&zfsvfs->z_hold_locks[i], NULL, MUTEX_DEFAULT, NULL);
 	}
 
-	error = zfsvfs_init(zfsvfs, os);
+	error = zfsvfs_init(zfsvfs, os, uidmap, gidmap);
 	if (error != 0) {
 		*zfvp = NULL;
 		zfsvfs_free(zfsvfs);
@@ -1812,7 +1859,7 @@ zfs_domount(struct super_block *sb, zfs_mnt_t *zm, int silent)
 	if (error)
 		return (error);
 
-	error = zfsvfs_create(osname, vfs->vfs_readonly, &zfsvfs);
+	error = zfsvfs_create(osname, vfs->vfs_readonly, vfs->vfs_uidmap, vfs->vfs_gidmap, &zfsvfs);
 	if (error) {
 		zfsvfs_vfs_free(vfs);
 		goto out;
@@ -2172,7 +2219,7 @@ zfs_resume_fs(zfsvfs_t *zfsvfs, dsl_dataset_t *ds)
 	VERIFY(dsl_dataset_long_held(ds));
 	VERIFY0(dmu_objset_from_ds(ds, &os));
 
-	err = zfsvfs_init(zfsvfs, os);
+	err = zfsvfs_init(zfsvfs, os, NULL, NULL);
 	if (err != 0)
 		goto bail;
 

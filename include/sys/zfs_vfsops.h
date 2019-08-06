@@ -69,6 +69,8 @@ typedef struct vfs {
 	boolean_t	vfs_do_relatime;
 	boolean_t	vfs_nbmand;
 	boolean_t	vfs_do_nbmand;
+	struct zfs_ugid_map	*vfs_uidmap;
+	struct zfs_ugid_map	*vfs_gidmap;
 } vfs_t;
 
 typedef struct zfs_mnt {
@@ -213,8 +215,8 @@ extern boolean_t zfs_id_overobjquota(zfsvfs_t *zfsvfs, uint64_t usedobj,
 extern boolean_t zfs_id_overquota(zfsvfs_t *zfsvfs, uint64_t usedobj,
     uint64_t id);
 extern int zfs_set_version(zfsvfs_t *zfsvfs, uint64_t newvers);
-extern int zfsvfs_create(const char *name, boolean_t readony, zfsvfs_t **zfvp);
-extern int zfsvfs_create_impl(zfsvfs_t **zfvp, zfsvfs_t *zfsvfs, objset_t *os);
+extern int zfsvfs_create(const char *name, boolean_t readony, struct zfs_ugid_map *uidmap, struct zfs_ugid_map *gidmap, zfsvfs_t **zfvp);
+extern int zfsvfs_create_impl(zfsvfs_t **zfvp, zfsvfs_t *zfsvfs, objset_t *os, struct zfs_ugid_map *uidmap, struct zfs_ugid_map *gidmap);
 extern void zfsvfs_free(zfsvfs_t *zfsvfs);
 extern int zfs_check_global_label(const char *dsname, const char *hexsl);
 
