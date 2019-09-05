@@ -3394,7 +3394,7 @@ arc_evict_state(arc_state_t *state, uint64_t spa, int64_t bytes,
 		 * Request that 10% of the LRUs be scanned by the superblock
 		 * shrinker.
 		 */
-		if (type == ARC_BUFC_DATA && arc_dnode_size > arc_dnode_limit)
+		if (type == ARC_BUFC_METADATA && arc_dnode_size > arc_dnode_limit)
 			arc_prune_async((arc_dnode_size - arc_dnode_limit) /
 			    sizeof (dnode_t) / zfs_arc_dnode_reduce_percent);
 
