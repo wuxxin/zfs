@@ -191,8 +191,9 @@ zpl_fsync(struct file *filp, loff_t start, loff_t end, int datasync)
 	fstrans_cookie_t cookie;
 
 	error = filemap_write_and_wait_range(inode->i_mapping, start, end);
-	if (error)
+	if (error) {
 		return (error);
+	}
 
 	crhold(cr);
 	cookie = spl_fstrans_mark();
@@ -421,17 +422,20 @@ zpl_iter_write(struct kiocb *kiocb, struct iov_iter *from)
 	size_t count;
 	ssize_t ret;
 	uio_seg_t seg = UIO_USERSPACE;
-
-#ifndef HAVE_GENERIC_WRITE_CHECKS_KIOCB
 	struct file *file = kiocb->ki_filp;
 	struct address_space *mapping = file->f_mapping;
 	struct inode *ip = mapping->host;
+
+	spl_inode_lock(ip);
+#ifndef HAVE_GENERIC_WRITE_CHECKS_KIOCB
 	int isblk = S_ISBLK(ip->i_mode);
 
 	count = iov_iter_count(from);
 	ret = generic_write_checks(file, &kiocb->ki_pos, &count, isblk);
-	if (ret)
+	if (ret) {
+		spl_inode_unlock(ip);
 		return (ret);
+	}
 #else
 	/*
 	 * XXX - ideally this check should be in the same lock region with
@@ -439,8 +443,10 @@ zpl_iter_write(struct kiocb *kiocb, struct iov_iter *from)
 	 * append and someone else grow the file.
 	 */
 	ret = generic_write_checks(kiocb, from);
-	if (ret <= 0)
+	if (ret <= 0) {
+		spl_inode_unlock(ip);
 		return (ret);
+	}
 	count = ret;
 #endif
 
@@ -454,6 +460,7 @@ zpl_iter_write(struct kiocb *kiocb, struct iov_iter *from)
 	if (ret > 0)
 		iov_iter_advance(from, ret);
 
+	spl_inode_unlock(ip);
 	return (ret);
 }
 #else
@@ -468,16 +475,21 @@ zpl_aio_write(struct kiocb *kiocb, const struct iovec *iovp,
 	size_t count;
 	ssize_t ret;
 
+	spl_inode_lock(ip);
 	ret = generic_segment_checks(iovp, &nr_segs, &count, VERIFY_READ);
 	if (ret)
-		return (ret);
+		goto errout;
 
 	ret = generic_write_checks(file, &pos, &count, isblk);
 	if (ret)
-		return (ret);
+		goto errout;
 
+	spl_inode_unlock(ip);
 	return (zpl_iter_write_common(kiocb, iovp, nr_segs, count,
 	    UIO_USERSPACE, 0));
+errout:
+	spl_inode_unlock(ip);
+	return (ret);
 }
 #endif /* HAVE_VFS_RW_ITERATE */
 
