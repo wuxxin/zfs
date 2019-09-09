@@ -26,8 +26,8 @@
 
 #include <sys/types.h>
 
-#define	TSD_HASH_TABLE_BITS_DEFAULT	9
-#define	TSD_KEYS_MAX			32768
+#define	TSD_HASH_TABLE_BITS_DEFAULT	13
+#define	TSD_KEYS_MAX			524288
 #define	DTOR_PID			(PID_MAX_LIMIT+1)
 #define	PID_KEY				(TSD_KEYS_MAX+1)
 
