@@ -1882,6 +1882,18 @@ zfsvfs_teardown(zfsvfs_t *zfsvfs, boolean_t unmounting)
 atomic_long_t zfs_bdi_seq = ATOMIC_LONG_INIT(0);
 #endif
 
+void
+zfs_defer_snap_umount(zfsvfs_t *zfsvfs)
+{
+	if (time_after(jiffies, zfsvfs->z_snap_defer_time +
+	    MAX(zfs_expire_snapshot * HZ / 2, HZ))) {
+		zfsvfs->z_snap_defer_time = jiffies;
+		zfsctl_snapshot_unmount_delay(zfsvfs->z_os->os_spa,
+		    dmu_objset_id(zfsvfs->z_os),
+		    zfs_expire_snapshot);
+	}
+}
+
 int
 zfs_domount(struct super_block *sb, zfs_mnt_t *zm, int silent)
 {
@@ -1931,9 +1943,6 @@ zfs_domount(struct super_block *sb, zfs_mnt_t *zm, int silent)
 	sb->s_op = &zpl_super_operations;
 	sb->s_xattr = zpl_xattr_handlers;
 	sb->s_export_op = &zpl_export_operations;
-#ifdef HAVE_S_D_OP
-	sb->s_d_op = &zpl_dentry_operations;
-#endif /* HAVE_S_D_OP */
 
 	/* Set features for file system. */
 	zfs_set_fuid_feature(zfsvfs);
@@ -2303,6 +2312,8 @@ zfs_resume_fs(zfsvfs_t *zfsvfs, dsl_dataset_t *ds)
 		zfs_unlinked_drain(zfsvfs);
 	}
 
+	shrink_dcache_sb(zfsvfs->z_parent->z_sb);
+	shrink_dcache_sb(zfsvfs->z_sb);
 bail:
 	if (err != 0)
 		zfsvfs->z_unmounted = B_TRUE;

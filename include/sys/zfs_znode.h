@@ -280,11 +280,27 @@ do {								\
 #define	ZFS_ENTER(zfsvfs)	ZFS_ENTER_ERROR(zfsvfs, EIO)
 #define	ZPL_ENTER(zfsvfs)	ZFS_ENTER_ERROR(zfsvfs, -EIO)
 
-/* Must be called before exiting the operation. */
+/*
+ * Must be called before exiting the vop
+ *
+ */
+#ifdef __linux_
+/*
+ * Automounted snapshots rely on periodic revalidation
+ * to defer snapshots from being automatically unmounted.
+ */
+#define	ZFS_EXIT(zfsvfs)					\
+do {								\
+    if (unlikely(zfsvfs->z_issnap))				\
+	zfs_defer_snap_umount(zfsvfs);				\
+    rrm_exit(&(zfsvfs)->z_teardown_lock, FTAG);			\
+} while (0)
+#else
 #define	ZFS_EXIT(zfsvfs)					\
 do {								\
 	rrm_exit(&(zfsvfs)->z_teardown_lock, FTAG);		\
 } while (0)
+#endif
 #define	ZPL_EXIT(zfsvfs)	ZFS_EXIT(zfsvfs)
 
 /* Verifies the znode is valid. */
