@@ -688,6 +688,10 @@ tests = ['online_offline_001_pos', 'online_offline_002_neg',
     'online_offline_003_neg']
 tags = ['functional', 'online_offline']
 
+[tests/functional/overlayfs]
+tests = ['overlayfs_basic', 'overlayfs_layered']
+tags = ['functional', 'overlayfs']
+
 [tests/functional/pool_checkpoint]
 tests = ['checkpoint_after_rewind', 'checkpoint_big_rewind',
     'checkpoint_capacity', 'checkpoint_conf_change', 'checkpoint_discard',
