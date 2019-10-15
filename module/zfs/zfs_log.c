@@ -569,6 +569,7 @@ zfs_log_rename_exchange(zilog_t *zilog, dmu_tx_t *tx, uint64_t txtype,
 	ASSERT3U(retries, !=, INT_MAX);
 
 	zfs_log_rename(zilog, tx, txtype, sdzp, sname, tdzp, tmpname, szp);
+	zfs_log_rename(zilog, tx, txtype, tdzp, dname, sdzp, sname, szp);
 	zfs_log_rename(zilog, tx, txtype, tdzp, tmpname, tdzp, dname, szp);
 
 	zfs_dirent_unlock(tmpdl);
