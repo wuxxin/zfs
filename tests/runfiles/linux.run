@@ -83,6 +83,10 @@ tags = ['functional', 'io']
 tests = ['mmap_libaio_001_pos']
 tags = ['functional', 'mmap']
 
+[tests/functional/overlayfs:Linux]
+tests = ['overlayfs_basic', 'overlayfs_layered']
+tags = ['functional', 'overlayfs']
+
 [tests/functional/projectquota:Linux]
 tests = ['projectid_001_pos', 'projectid_002_pos', 'projectid_003_pos',
     'projectquota_001_pos', 'projectquota_002_pos', 'projectquota_003_pos',
