@@ -280,9 +280,13 @@ do {								\
 #define	ZFS_ENTER(zfsvfs)	ZFS_ENTER_ERROR(zfsvfs, EIO)
 #define	ZPL_ENTER(zfsvfs)	ZFS_ENTER_ERROR(zfsvfs, -EIO)
 
-/* Must be called before exiting the operation. */
+/*
+ * Must be called before exiting the vop
+ *
+ */
 #define	ZFS_EXIT(zfsvfs)					\
 do {								\
+	zfs_exit_fs(zfsvfs);					\
 	rrm_exit(&(zfsvfs)->z_teardown_lock, FTAG);		\
 } while (0)
 #define	ZPL_EXIT(zfsvfs)	ZFS_EXIT(zfsvfs)
