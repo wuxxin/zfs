@@ -27,6 +27,7 @@
 
 #include <linux/proc_fs.h>
 
+extern struct proc_dir_entry *proc_spl;
 extern struct proc_dir_entry *proc_spl_kstat;
 
 int spl_proc_init(void);
