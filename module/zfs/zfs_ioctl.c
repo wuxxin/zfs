@@ -435,6 +435,7 @@ zfs_dozonecheck_impl(const char *dataset, uint64_t zoned, cred_t *cr)
 		if (!writable)
 			return (SET_ERROR(EPERM));
 	}
+
 	return (0);
 }
 

@@ -740,4 +740,12 @@ extern int kmem_cache_reap_active(void);
 #define	____cacheline_aligned
 
 #endif /* _KERNEL */
+
+static inline void
+drv_usecwait(clock_t usecs)
+{
+	delay((unsigned long)usecs);
+}
+#define		_SYS_NMLN		257		/* system name length */
+#define		HW_INVALID_HOSTID	0xFFFFFFFF	/* an invalid hostid */
 #endif	/* _SYS_ZFS_CONTEXT_H */

@@ -40,6 +40,7 @@
 #include <sys/vdev_indirect_births.h>
 #include <sys/vdev_removal.h>
 #include <sys/zfs_ratelimit.h>
+#include <sys/zone.h>
 
 #ifdef	__cplusplus
 extern "C" {
@@ -147,6 +148,7 @@ struct vdev_queue {
 	avl_tree_t	vq_write_offset_tree;
 	avl_tree_t	vq_trim_offset_tree;
 	uint64_t	vq_last_offset;
+	zoneid_t	vq_last_zone_id;
 	hrtime_t	vq_io_complete_ts; /* time last i/o completed */
 	hrtime_t	vq_io_delta_ts;
 	zio_t		vq_io_search; /* used as local for stack reduction */
